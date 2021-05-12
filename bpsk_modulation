@@ -27,10 +27,10 @@ message=np.zeros(number_of_symbols*symbol_length)
 j=0
 for i in range(len(input_stream)):
     if input_stream[i]==1:
-        message[j:j+symbol_length]=a*np.ones(symbol_length)
+        message[j:j+symbol_length]=np.ones(symbol_length)
         j=j+symbol_length
     else:    
-        message[j:j+symbol_length]=-a*np.ones(symbol_length)
+        message[j:j+symbol_length]=-np.ones(symbol_length)
         j=j+symbol_length
         
 print(np.size(message))
@@ -38,10 +38,10 @@ print(np.size(message))
 j=0;
 for i in range(len(input_stream)):
     if input_stream[i]==1:
-        bpsk[j:j+symbol_length]=np.sin(2*pi*fc*t[0:symbol_length])
+        bpsk[j:j+symbol_length]=a*np.sin(2*pi*fc*t[0:symbol_length])
         j=j+symbol_length
     else:    
-        bpsk[j:j+symbol_length]=np.sin(2*pi*fc*t[0:symbol_length]+pi)
+        bpsk[j:j+symbol_length]=a*np.sin(2*pi*fc*t[0:symbol_length]+pi)
         j=j+symbol_length                           
 
                                        
@@ -56,7 +56,7 @@ plt.ylabel('Amplitude')
 
 plt.subplot(212)
 plt.plot(t,bpsk)
-plt.title('Modulated Signal')
+plt.title('BPSK Modulated Signal')
 plt.xlabel('Time(s)')
 plt.ylabel('Amplitude')    
 plt.tight_layout()    
