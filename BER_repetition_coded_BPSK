@@ -37,7 +37,7 @@ class Bpsk():
       for j in range(R):
         msg_rep=np.append(msg_rep,i)
     return msg_rep
-  def repetition_decode(y,R):
+  def hard_repetition_decode(y,R):
     y_dec=np.array([])
     for i in range(0,len(y),R):
       if np.sum(y[i:i+R-1])>(R/2):
@@ -45,9 +45,17 @@ class Bpsk():
       else:
         y_dec=np.append(y_dec,0)
     return y_dec
+  def soft_repetition_decode(y,R):
+    y_dec=np.array([])
+    for i in range(0,len(y),R):
+      if np.sum(y[i:i+R-1])>0:
+        y_dec=np.append(y_dec,0)
+      else:
+        y_dec=np.append(y_dec,1)
+    return y_dec
     
   
-#coding rate
+#coding rate r=(1/3), R=1/r
 R=3
 Eb_N0_db=np.linspace(0,12,51);
 Eb_N0=10**(Eb_N0_db/10)
@@ -61,11 +69,12 @@ Eb_N0=10**(Eb_N0_db/10)
 
 
 BER_p=np.array([])
-BER_p_rep=np.array([])
+hard_BER_p_rep=np.array([])
+soft_BER_p_rep=np.array([])
 for Eb_N0_dbp in Eb_N0_db: 
   Eb_N0p=10**(Eb_N0_dbp/10)
   sigma=np.sqrt(1/(2*Eb_N0p)) #uncoded
-  sigma_R=np.sqrt(1/(2*R*Eb_N0p)) #coded
+  sigma_R=np.sqrt(R/(2*Eb_N0p)) #coded
   N=10000 #number of message symbols
   msg=Bpsk.Source(N)
   msg_rep=Bpsk.repetition_code(msg,R)
@@ -76,24 +85,28 @@ for Eb_N0_dbp in Eb_N0_db:
   y=x+n #Received vector
   y_rep=x_rep+n_rep
   y_hat=Bpsk.Decode(y)
-  y_hat_rep=Bpsk.Decode(y_rep)
-  y_hat_rep_dec=Bpsk.repetition_decode(y_hat_rep, R)
+  y_hard_hat_rep=Bpsk.Decode(y_rep)
+  y_hat_hard_rep_dec=Bpsk.hard_repetition_decode(y_hard_hat_rep, R)
+  y_hat_soft_rep_dec=Bpsk.soft_repetition_decode(y_rep, R)
   #print(x, y)
   y_error=Bpsk.Error(msg,y_hat)
-  y_error_rep=Bpsk.Error(msg,y_hat_rep_dec)
+  y_error_hard_rep=Bpsk.Error(msg,y_hat_hard_rep_dec)
+  y_error_soft_rep=Bpsk.Error(msg,y_hat_soft_rep_dec)
   #print(msg, y_hat)
   Total_errors=np.sum(y_error)
-  Total_errors_rep=np.sum(y_error_rep)
+  Total_errors_hard_rep=np.sum(y_error_hard_rep)
+  Total_errors_soft_rep=np.sum(y_error_soft_rep)
   BER_p=np.append(BER_p,Total_errors/N)
-  BER_p_rep=np.append(BER_p_rep,Total_errors_rep/(N))
+  hard_BER_p_rep=np.append(hard_BER_p_rep,Total_errors_hard_rep/(N))
+  soft_BER_p_rep=np.append(soft_BER_p_rep,Total_errors_soft_rep/(N))
 
 
 plt.figure()
-plt.plot(Eb_N0_db,BER_p, Eb_N0_db,BER_p_rep)
+plt.plot(Eb_N0_db,BER_p, Eb_N0_db,hard_BER_p_rep, Eb_N0_db,soft_BER_p_rep)
 plt.xlabel("Eb/N0")
 plt.ylabel("BER")
 plt.grid()
 plt.title("BER coded vs uncoded")
-plt.legend(['Uncoded', 'Reprtition Code R=3'])
+plt.legend(['Uncoded', 'HardDecsion Rep Code r=1/3', 'SoftDecsion Rep Code r=1/3'])
 
 plt.show()
