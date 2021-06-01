@@ -1,0 +1,79 @@
+import numpy as np
+from scipy import special
+import matplotlib.pyplot as plt
+
+#coding rate
+def Q(x):
+  #Q(x)=0.5*erfc(x/sqrt(2))=0.5*(1-erf(x/sqrt(2)))
+  return 0.5*(1-special.erf(x/np.sqrt(2)))
+R=3
+Eb_N0_db=np.linspace(0,12,101);
+Eb_N0=10**(Eb_N0_db/10)
+SNR=2*Eb_N0;
+#BER of BPSK=Q(sqrt(SNR))
+ber=Q(np.sqrt(SNR))
+
+#BER of bpsk pratical for one Eb_No
+def Decode(y):
+  y_hat=np.array([])
+  for i in y:
+    if i<0:
+      y_hat=np.append(y_hat, 1)
+    else:
+     y_hat=np.append(y_hat, 0)
+  return y_hat
+
+def Error(msg,y_hat):
+  y_err=np.array([])
+  for i in range(len(msg)):
+    if msg[i] ==y_hat[i]:
+      y_err=np.append(y_err, 0)
+    else:
+      y_err=np.append(y_err, 1)
+  return y_err
+def repetition_code(msg,R):
+  msg_rep=np.array([])
+  for i in msg:
+    for j in range(R):
+          msg_rep=np.append(msg_rep,i)
+  return msg_rep
+
+
+
+
+BER_p=np.array([])
+BER_p_rep=np.array([])
+for Eb_N0_dbp in Eb_N0_db: 
+  Eb_N0p=10**(Eb_N0_dbp/10)
+  sigma=np.sqrt(1/(2*Eb_N0p)) #uncoded
+  sigma_R=np.sqrt(1/(2*R*Eb_N0p)) #coded
+  N=10000 #number of message symbols
+  msg=np.random.randint(2,size=N)
+  msg_rep=repetition_code(msg,R)
+  x=1-2*msg #convert 0,1s to 1,-1s
+  x_rep=1-2*msg_rep
+  n=np.random.normal(0, sigma, size=N)
+  n_rep=np.random.normal(0, sigma_R, size=R*N)
+  y=x+n #Received vector
+  y_rep=x_rep+n_rep
+  y_hat=Decode(y)
+  y_hat_rep=Decode(y_rep)
+  #print(x, y)
+  y_error=Error(msg,y_hat)
+  y_error_rep=Error(msg_rep,y_hat_rep)
+  #print(msg, y_hat)
+  Total_errors=np.sum(y_error)
+  Total_errors_rep=np.sum(y_error_rep)
+  BER_p=np.append(BER_p,Total_errors/N)
+  BER_p_rep=np.append(BER_p_rep,Total_errors_rep/N)
+
+
+plt.figure()
+plt.plot(Eb_N0_db,BER_p, Eb_N0_db,BER_p_rep)
+plt.xlabel("Eb/N0")
+plt.ylabel("BER")
+plt.grid()
+plt.title("BER coded vs uncoded")
+plt.legend(['Uncoded', 'Reprtition Code R=3'])
+
+plt.show()
